@@ -23,3 +23,10 @@ class User(TimeStampedModel, AbstractBaseUser):
             return f'{self.first_name} {self.last_name}'
 
         return self.email
+
+
+class UserEventLog(models.Model):
+    event_type = models.CharField(max_length=255)
+    payload = models.JSONField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    processed = models.BooleanField(default=False)

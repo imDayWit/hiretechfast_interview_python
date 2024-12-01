@@ -10,6 +10,7 @@ from django.conf import settings
 from django.utils import timezone
 
 from core.base_model import Model
+import json
 
 logger = structlog.get_logger(__name__)
 
@@ -67,13 +68,13 @@ class EventLogClient:
             logger.error('failed to execute clickhouse query', error=str(e))
             return
 
-    def _convert_data(self, data: list[Model]) -> list[tuple[Any]]:
+    def _convert_data(self, data: list[dict]) -> list[tuple[Any]]:
         return [
             (
-                self._to_snake_case(event.__class__.__name__),
+                self._to_snake_case(event['event_type']),
                 timezone.now(),
                 settings.ENVIRONMENT,
-                event.model_dump_json(),
+                json.dumps(event)
             )
             for event in data
         ]

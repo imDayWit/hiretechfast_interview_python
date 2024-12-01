@@ -4,6 +4,8 @@ services:
   app:
     build: .
     restart: always
+    image: app-image:latest
+    tty: true
     depends_on:
       - db
       - clickhouse
@@ -36,6 +38,11 @@ services:
       - default
     ports:
       - 6379:6379
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 1s
+      timeout: 3s
+      retries: 30
 
   clickhouse:
     image: "clickhouse/clickhouse-server:23.8.2.7-alpine"
@@ -44,8 +51,35 @@ services:
     volumes:
       - ./docker/clickhouse/init.sql:/docker-entrypoint-initdb.d/init.sql
 
+  celery-worker:
+    container_name: celery-worker-container
+    depends_on:
+      redis:
+        condition: service_healthy
+    image: app-image:latest
+    env_file: ./src/core/.env
+    volumes:
+      - celery_log:/var/log/
+    restart: "no"
+    command: [ 'celery', '-A', 'core', 'worker', '-l', 'INFO', '--concurrency=4' ]
+    healthcheck:
+      test: celery -A core status || exit 1
+      interval: 10s
+      timeout: 10s
+      retries: 10
+
+  celery-beat:
+    container_name: celery-beat-container
+    depends_on:
+      - celery-worker
+    image: app-image:latest
+    env_file: ./src/core/.env
+    restart: "no"
+    command: celery -A core beat -l INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler
+
 
 volumes:
   dev-db-data: {}
   app_media_files: { }
   app_static_files: { }
+  celery_log:
