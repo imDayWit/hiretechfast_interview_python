@@ -1,4 +1,4 @@
-# Die Hard
+# Die Hard (check docs/result_(en/ru))
 
 This is a project with a test task for backend developers.
 
