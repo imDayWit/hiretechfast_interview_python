@@ -4,7 +4,6 @@ from pathlib import Path
 import environ
 import sentry_sdk
 import structlog
-from celery.schedules import crontab
 
 env = environ.Env(
     DEBUG=(bool, False),
@@ -28,8 +27,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    # third party apps
-    "django_celery_beat",
+
     # project apps
     'users',
 ]
@@ -78,7 +76,7 @@ CLICKHOUSE_URI = (
     f'clickhouse://{CLICKHOUSE_USER}:{CLICKHOUSE_PASSWORD}@{CLICKHOUSE_HOST}:{CLICKHOUSE_PORT}/{CLICKHOUSE_SCHEMA}?protocol='
     f'{CLICKHOUSE_PROTOCOL}'
 )
-CLICKHOUSE_EVENT_LOG_TABLE_NAME = 'event_log_buffer'
+CLICKHOUSE_EVENT_LOG_TABLE_NAME = 'event_log'
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -113,14 +111,6 @@ STATIC_ROOT = env("STATIC_ROOT")
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CELERY_BROKER = env("CELERY_BROKER", default="redis://localhost:6379/0")
-#CELERY_RESULT_BACKEND = "redis://localhost:6379/0"
-CELERY_BEAT_SCHEDULE = {
-    "User transactions": {
-        "task": "users.tasks.user_transactions"
-        ".process_event_logs_task",
-        "schedule": crontab(minute="*"),  # execute every minute
-    }
-}
 CELERY_ALWAYS_EAGER = env("CELERY_ALWAYS_EAGER", default=DEBUG)
 
 LOG_FORMATTER = env("LOG_FORMATTER", default="console")
