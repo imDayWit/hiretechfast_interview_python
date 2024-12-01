@@ -1,4 +1,4 @@
-# Die Hard
+# Die Hard (check result_(ru_en).md)
 
 This is a project with a test task for backend developers.
 
